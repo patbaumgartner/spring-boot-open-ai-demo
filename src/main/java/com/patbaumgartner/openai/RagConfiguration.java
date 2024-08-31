@@ -1,12 +1,12 @@
 package com.patbaumgartner.openai;
 
-import org.springframework.ai.chat.ChatClient;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.Message;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.ai.chat.prompt.SystemPromptTemplate;
 import org.springframework.ai.document.Document;
-import org.springframework.ai.embedding.EmbeddingClient;
+import org.springframework.ai.embedding.EmbeddingModel;
 import org.springframework.ai.reader.pdf.PagePdfDocumentReader;
 import org.springframework.ai.transformer.splitter.TokenTextSplitter;
 import org.springframework.ai.vectorstore.SimpleVectorStore;
@@ -27,8 +27,9 @@ import java.util.stream.Collectors;
 public class RagConfiguration {
 
 	@Bean
-	VectorStore vectors(EmbeddingClient embedding, @Value("Artificial intelligence - Wikipedia.pdf") Resource pdf) {
-		SimpleVectorStore vectors = new SimpleVectorStore(embedding);
+	VectorStore vectors(EmbeddingModel embeddingModel, @Value("Artificial intelligence - Wikipedia.pdf") Resource pdf) {
+
+		SimpleVectorStore vectors = new SimpleVectorStore(embeddingModel);
 		PagePdfDocumentReader reader = new PagePdfDocumentReader(pdf);
 		TokenTextSplitter splitter = new TokenTextSplitter();
 		List<Document> documents = splitter.apply(reader.get());
@@ -37,7 +38,9 @@ public class RagConfiguration {
 	}
 
 	@Bean
-	CommandLineRunner vectorClr(ChatClient chatClient, VectorStore vectors) {
+	CommandLineRunner vectorClr(ChatClient.Builder chatClientBuilder, VectorStore vectors) {
+		ChatClient chatClient = chatClientBuilder.build();
+
 		return args -> {
 			String message = "Why is the definition of AI difficult?";
 			List<Document> documents = vectors.similaritySearch(message);
@@ -59,7 +62,7 @@ public class RagConfiguration {
 			UserMessage user = new UserMessage(message);
 
 			Prompt combinedPrompt = new Prompt(List.of(system, user));
-			String answer = chatClient.call(combinedPrompt).getResult().getOutput().getContent();
+			String answer = chatClient.prompt(combinedPrompt).call().content();
 			System.out.printf("\nChatGPT answered: \n\n%s\n", answer);
 		};
 	}

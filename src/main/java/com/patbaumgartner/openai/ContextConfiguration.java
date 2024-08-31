@@ -1,7 +1,6 @@
 package com.patbaumgartner.openai;
 
-import org.springframework.ai.chat.ChatClient;
-import org.springframework.ai.chat.ChatResponse;
+import org.springframework.ai.chat.client.ChatClient;
 import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.prompt.Prompt;
@@ -17,7 +16,9 @@ import java.util.List;
 public class ContextConfiguration {
 
 	@Bean
-	CommandLineRunner contextClr(ChatClient chatClient) {
+	CommandLineRunner contextClr(ChatClient.Builder chatClientBuilder) {
+		ChatClient chatClient = chatClientBuilder.build();
+
 		return args -> {
 			String message = "What is today's temperature?";
 
@@ -36,9 +37,7 @@ public class ContextConfiguration {
 					Visibility 24 km
 					Cloud Ceiling 12200 m"""), new UserMessage(message)));
 
-			ChatResponse response = chatClient.call(prompt);
-			String answer = response.getResult().getOutput().getContent();
-
+			String answer = chatClient.prompt(prompt).call().content();
 			System.out.printf("\nChatGPT answered: \n\n%s\n", answer);
 		};
 	}

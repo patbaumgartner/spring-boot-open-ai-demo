@@ -49,7 +49,7 @@ public class WeatherService implements Function<WeatherService.Request, WeatherS
 	}
 
 	@JsonInclude(Include.NON_NULL)
-	@JsonClassDescription("Weather API request")
+	@JsonClassDescription("Get the weather in location")
 	public record Request(@JsonProperty(required = true,
 			value = "location") @JsonPropertyDescription("The city and country like Zurich, Switzerland") String location,
 			@JsonProperty(required = true, value = "lat") @JsonPropertyDescription("City latitude") double lat,
